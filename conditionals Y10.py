@@ -253,7 +253,7 @@ st.title("🇬🇧 Conditional Sentences Trainer")
 st.write("---")
 
 if st.session_state.phase == "START":
-    st.write("Trainiere alle 210 Sätze der If-Clauses Typ I, II und III.")
+    st.write("Trainiere If-Clauses Typ I, II und III.")
     st.write("Möchtest du die Typen erst einzeln üben (je 5 Sätze pro Typ)?")
     col1, col2 = st.columns(2)
     if col1.button("Ja, Typen einzeln"):
@@ -344,3 +344,4 @@ elif st.session_state.phase == "FINISHED":
         st.session_state.score = 0
         st.session_state.mistakes = []
         st.rerun()
+
