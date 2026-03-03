@@ -1,6 +1,15 @@
 import streamlit as st
 import random
 
+import streamlit as st
+from PIL import Image
+# Schullogo anzeigen
+try:
+ logo = Image.open('schullogo.png')
+ st.image(logo, width=150)
+except:
+ pass # Falls das Bild fehlt, wird dieser Teil übersprungen
+    
 # --- DATENPOOL (210 SÄTZE) ---
 def get_full_sentence_pool():
     # Typ 1: Realis (70 Sätze)
@@ -344,4 +353,5 @@ elif st.session_state.phase == "FINISHED":
         st.session_state.score = 0
         st.session_state.mistakes = []
         st.rerun()
+
 
