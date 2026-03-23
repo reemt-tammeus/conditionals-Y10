@@ -1,15 +1,79 @@
 import streamlit as st
 import random
+import base64
+import os
 
-import streamlit as st
-from PIL import Image
-# Schullogo anzeigen
-try:
- logo = Image.open('schullogo.png')
- st.image(logo, width=150)
-except:
- pass # Falls das Bild fehlt, wird dieser Teil übersprungen
+# --- KONFIGURATION & CSS ---
+st.set_page_config(page_title="Iffy - Conditional App", page_icon="🇬🇧", layout="centered")
+
+# Funktion zum Laden des Logos für die absolute Positionierung
+def get_base64_image(image_path):
+    try:
+        with open(image_path, "rb") as img_file:
+            return base64.b64encode(img_file.read()).decode()
+    except FileNotFoundError:
+        return ""
+
+logo_base64 = get_base64_image("Iffy.jpg")
+logo_html = f"""
+    <div style="position: fixed; top: 15px; right: 15px; z-index: 100;">
+        <img src="data:image/jpeg;base64,{logo_base64}" width="80" style="border-radius: 15px; box-shadow: 0px 4px 10px rgba(255,255,255,0.2);">
+    </div>
+""" if logo_base64 else ""
+
+# CSS für schwarzen Hintergrund, weiße Schrift und invertierende Buttons
+st.markdown(f"""
+    {logo_html}
+    <style>
+    /* Schwarzer Hintergrund für die App */
+    .stApp {{
+        background-color: #000000;
+        color: #ffffff;
+    }}
     
+    /* Textfarbe für Überschriften und Standardtext erzwingen */
+    h1, h2, h3, p, div, span, label {{
+        color: #ffffff !important;
+    }}
+
+    /* Button Styling: Schwarz mit weißem Rand, invertiert bei Hover */
+    div.stButton > button:first-child {{
+        background-color: #000000 !important;
+        color: #ffffff !important;
+        border: 2px solid #ffffff !important;
+        border-radius: 12px !important;
+        padding: 15px 24px !important;
+        font-weight: bold !important;
+        font-size: 18px !important;
+        width: 100%;
+        transition: all 0.3s ease-in-out !important;
+    }}
+    
+    div.stButton > button:first-child:hover {{
+        background-color: #ffffff !important;
+        color: #000000 !important;
+        border: 2px solid #000000 !important;
+    }}
+
+    /* Eingabefeld Styling anpassen */
+    div.stTextInput input {{
+        background-color: #1a1a1a !important;
+        color: #ffffff !important;
+        border: 1px solid #ffffff !important;
+    }}
+    </style>
+""", unsafe_allow_html=True)
+
+
+# --- HILFSFUNKTIONEN ---
+def normalize_string(s):
+    """Bereinigt den String für einen toleranten Abgleich (iOS Apostroph-Problem & Case-Insensitivity)"""
+    s = s.lower().strip()
+    # Ersetze alle typografischen Anführungszeichen/Apostrophe durch das Standard-Apostroph
+    for char in ["’", "‘", "´", "`"]:
+        s = s.replace(char, "'")
+    return s
+
 # --- DATENPOOL (210 SÄTZE) ---
 def get_full_sentence_pool():
     # Typ 1: Realis (70 Sätze)
@@ -238,7 +302,6 @@ def get_full_sentence_pool():
     return [{"text": s[0], "answers": s[1], "type": s[2]} for s in all_data]
 
 # --- STREAMLIT APP LOGIK ---
-st.set_page_config(page_title="Conditional Trainer 210", page_icon="📝")
 
 # Session State initialisieren
 if 'phase' not in st.session_state:
@@ -249,87 +312,118 @@ if 'phase' not in st.session_state:
     st.session_state.score = 0
     st.session_state.counter = 0
     st.session_state.feedback = None
-    st.session_state.mistakes = [] # Liste für die Fehleranalyse
+    st.session_state.mistakes = [] 
+    st.session_state.target_types = []
+    st.session_state.mode_label = ""
 
-def get_next_question(q_type=None):
-    available = [i for i, s in enumerate(st.session_state.pool) if (q_type is None or s['type'] == q_type) and i not in st.session_state.used_ids]
-    if not available: return None
+def get_next_question():
+    available = [
+        i for i, s in enumerate(st.session_state.pool) 
+        if s['type'] in st.session_state.target_types and i not in st.session_state.used_ids
+    ]
+    if not available: 
+        return None
     idx = random.choice(available)
     st.session_state.used_ids.append(idx)
     return st.session_state.pool[idx]
 
-st.title("🇬🇧 Conditional Sentences Trainer")
+def start_training(types_list, label):
+    st.session_state.target_types = types_list
+    st.session_state.mode_label = label
+    st.session_state.phase = "TRAINING"
+    st.session_state.counter = 0
+    st.session_state.score = 0
+    st.session_state.mistakes = []
+    st.session_state.used_ids = []
+    st.session_state.current_q = None
+    st.session_state.feedback = None
+
+# --- MAIN RENDER LOGIC ---
+
+st.title("🇬🇧 Conditional Sentences Trainer 210")
 st.write("---")
 
 if st.session_state.phase == "START":
-    st.write("Trainiere If-Clauses Typ I, II und III.")
-    st.write("Möchtest du die Typen erst einzeln üben (je 5 Sätze pro Typ)?")
-    col1, col2 = st.columns(2)
-    if col1.button("Ja, Typen einzeln"):
-        st.session_state.phase = "DRILL_1"
+    st.subheader("Wähle einen Übungsmodus (je 20 Sätze):")
+    st.write("") # Kleiner Abstand
+    
+    if st.button("Type 1 (Real Life)"):
+        start_training([1], "Type 1 (Real Life)")
         st.rerun()
-    if col2.button("Nein, direkt mischen"):
-        st.session_state.phase = "MIXED"
+        
+    st.write("") # Abstand
+    if st.button("Type 2 (Dreams)"):
+        start_training([2], "Type 2 (Dreams)")
+        st.rerun()
+        
+    st.write("")
+    if st.button("Type 3 (Regrets)"):
+        start_training([3], "Type 3 (Regrets)")
+        st.rerun()
+        
+    st.write("")
+    if st.button("Mix Type 1 + 2"):
+        start_training([1, 2], "Mix Type 1 + 2")
+        st.rerun()
+        
+    st.write("")
+    if st.button("Extreme Mix (1-3)"):
+        start_training([1, 2, 3], "Extreme Mix (1-3)")
         st.rerun()
 
-elif st.session_state.phase in ["DRILL_1", "DRILL_2", "DRILL_3", "MIXED"]:
-    # Konfiguration
-    if st.session_state.phase == "DRILL_1": target, limit, label = 1, 5, "Typ I"
-    elif st.session_state.phase == "DRILL_2": target, limit, label = 2, 5, "Typ II"
-    elif st.session_state.phase == "DRILL_3": target, limit, label = 3, 5, "Typ III"
-    else: target, limit, label = None, 20, "Gemischtes Training"
-
-    st.subheader(f"Modus: {label}")
+elif st.session_state.phase == "TRAINING":
+    limit = 20
+    st.subheader(f"Modus: {st.session_state.mode_label}")
     st.info(f"Satz {st.session_state.counter + 1} von {limit}")
 
     if st.session_state.current_q is None:
-        st.session_state.current_q = get_next_question(target)
+        st.session_state.current_q = get_next_question()
 
     if st.session_state.current_q:
         st.markdown(f"### {st.session_state.current_q['text']}")
-        user_input = st.text_input("Antwort eingeben:", key=f"q_{len(st.session_state.used_ids)}").strip()
+        
+        # Eingabefeld
+        user_input = st.text_input("Antwort eingeben:", key=f"q_{len(st.session_state.used_ids)}")
         
         if st.button("Prüfen"):
-            correct_list = st.session_state.current_q['answers']
-            if user_input.lower() in [a.lower() for a in correct_list]:
-                st.session_state.feedback = ("success", "Korrekt!")
-                st.session_state.score += 1
+            if user_input.strip() == "":
+                st.warning("Bitte gib eine Antwort ein.")
             else:
-                st.session_state.feedback = ("error", f"Falsch. Richtig: {' / '.join(correct_list)}")
-                # Fehler für Analyse speichern
-                st.session_state.mistakes.append({
-                    "text": st.session_state.current_q['text'],
-                    "user": user_input,
-                    "correct": " / ".join(correct_list)
-                })
+                correct_list = st.session_state.current_q['answers']
+                user_norm = normalize_string(user_input)
+                correct_norm_list = [normalize_string(a) for a in correct_list]
+                
+                if user_norm in correct_norm_list:
+                    st.session_state.feedback = ("success", "Korrekt!")
+                    st.session_state.score += 1
+                else:
+                    st.session_state.feedback = ("error", f"Falsch. Richtig: {' / '.join(correct_list)}")
+                    st.session_state.mistakes.append({
+                        "text": st.session_state.current_q['text'],
+                        "user": user_input,
+                        "correct": " / ".join(correct_list)
+                    })
         
         if st.session_state.feedback:
-            if st.session_state.feedback[0] == "success": st.success(st.session_state.feedback[1])
-            else: st.error(st.session_state.feedback[1])
+            if st.session_state.feedback[0] == "success": 
+                st.success(st.session_state.feedback[1])
+            else: 
+                st.error(st.session_state.feedback[1])
             
             if st.button("Weiter"):
                 st.session_state.counter += 1
                 st.session_state.feedback = None
                 st.session_state.current_q = None
                 
-                # Logik für Phasenwechsel
-                if st.session_state.phase.startswith("DRILL") and st.session_state.counter >= 5:
-                    if st.session_state.phase == "DRILL_1": st.session_state.phase = "DRILL_2"
-                    elif st.session_state.phase == "DRILL_2": st.session_state.phase = "DRILL_3"
-                    elif st.session_state.phase == "DRILL_3": 
-                        st.session_state.phase = "MIXED"
-                        st.session_state.counter = 0
-                    st.session_state.counter = 0
-                elif st.session_state.phase == "MIXED" and st.session_state.counter >= 20:
+                if st.session_state.counter >= limit:
                     st.session_state.phase = "FINISHED"
                 st.rerun()
 
 elif st.session_state.phase == "FINISHED":
     st.balloons()
     st.header("Training beendet!")
-    st.write(f"Du hast insgesamt {st.session_state.score} Punkte erreicht.")
+    st.write(f"Du hast insgesamt {st.session_state.score} von 20 Punkten erreicht.")
     
-    # Fehleranalyse anzeigen
     if st.session_state.mistakes:
         with st.expander("Deine Fehleranalyse ansehen"):
             for m in st.session_state.mistakes:
@@ -340,18 +434,8 @@ elif st.session_state.phase == "FINISHED":
     else:
         st.success("Perfekt! Du hast keine Fehler gemacht.")
 
-    if st.button("Noch 20 Sätze üben"):
-        st.session_state.phase = "MIXED"
-        st.session_state.counter = 0
-        st.session_state.current_q = None
-        st.session_state.mistakes = [] # Reset Fehlerliste für neue Runde
-        st.rerun()
-    
-    if st.button("Zum Hauptmenü"):
+    st.write("")
+    st.write("")
+    if st.button("Zurück zum Hauptmenü"):
         st.session_state.phase = "START"
-        st.session_state.used_ids = []
-        st.session_state.score = 0
-        st.session_state.mistakes = []
         st.rerun()
-
-
