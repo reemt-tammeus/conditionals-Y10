@@ -4,15 +4,19 @@ import base64
 import os
 
 # --- KONFIGURATION & CSS ---
-st.set_page_config(page_title="Iffy - Conditional App", page_icon="🇬🇧", layout="centered")
+st.set_page_config(page_title="Iffy - Conditional App", layout="centered")
 
 # Funktion zum Laden des Logos für die absolute Positionierung
 def get_base64_image(image_path):
+    # Ermittelt den absoluten Pfad des Ordners, in dem dieses Skript liegt
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    absolute_image_path = os.path.join(script_dir, image_path)
+    
     try:
-        with open(image_path, "rb") as img_file:
+        with open(absolute_image_path, "rb") as img_file:
             return base64.b64encode(img_file.read()).decode()
     except FileNotFoundError:
-        st.sidebar.error(f"⚠️ Bild '{image_path}' nicht gefunden! Bitte prüfe den Pfad.")
+        st.sidebar.error(f"⚠️ Bild nicht gefunden! Gesuchter Pfad:\n{absolute_image_path}")
         return ""
 
 logo_base64 = get_base64_image("Iffy.jpg")
@@ -22,7 +26,7 @@ logo_html = f"""
     </div>
 """ if logo_base64 else ""
 
-# CSS für schwarzen Hintergrund, weiße Schrift und invertierende, zentrierte Buttons
+# CSS für schwarzen Hintergrund, weiße Schrift und invertierende Buttons
 st.markdown(f"""
     {logo_html}
     <style>
@@ -50,11 +54,10 @@ st.markdown(f"""
         color: #ffffff !important;
         border: 2px solid #ffffff !important;
         border-radius: 12px !important;
-        padding: 15px 24px !important;
+        padding: 15px 10px !important;
         font-weight: bold !important;
-        font-size: 18px !important;
-        width: 80%;
-        max-width: 350px;
+        font-size: 16px !important;
+        width: 100% !important; /* Füllt die Spalten komplett aus */
         transition: all 0.3s ease-in-out !important;
     }}
     
@@ -358,29 +361,36 @@ if st.session_state.phase == "START":
     st.subheader("Wähle einen Übungsmodus (je 20 Sätze):")
     st.write("") 
     
-    if st.button("Type 1 (Real Life)"):
-        start_training([1], "Type 1 (Real Life)")
-        st.rerun()
-        
-    st.write("") 
-    if st.button("Type 2 (Dreams)"):
-        start_training([2], "Type 2 (Dreams)")
-        st.rerun()
-        
-    st.write("")
-    if st.button("Type 3 (Regrets)"):
-        start_training([3], "Type 3 (Regrets)")
-        st.rerun()
-        
-    st.write("")
-    if st.button("Mix Type 1 + 2"):
-        start_training([1, 2], "Mix Type 1 + 2")
-        st.rerun()
-        
-    st.write("")
-    if st.button("Extreme Mix (1-3)"):
-        start_training([1, 2, 3], "Extreme Mix (1-3)")
-        st.rerun()
+    # Erste Zeile: 3 Spalten für die Type 1-3 Buttons
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        if st.button("Type 1\n(Real Life)"):
+            start_training([1], "Type 1 (Real Life)")
+            st.rerun()
+            
+    with col2:
+        if st.button("Type 2\n(Dreams)"):
+            start_training([2], "Type 2 (Dreams)")
+            st.rerun()
+            
+    with col3:
+        if st.button("Type 3\n(Regrets)"):
+            start_training([3], "Type 3 (Regrets)")
+            st.rerun()
+            
+    st.write("") # Abstand
+    
+    # Zweite Zeile: 2 Spalten für die Mix Buttons
+    col4, col5 = st.columns(2)
+    with col4:
+        if st.button("Mix\nType 1 + 2"):
+            start_training([1, 2], "Mix Type 1 + 2")
+            st.rerun()
+            
+    with col5:
+        if st.button("Extreme Mix\n(1-3)"):
+            start_training([1, 2, 3], "Extreme Mix (1-3)")
+            st.rerun()
 
 elif st.session_state.phase == "TRAINING":
     limit = 20
@@ -466,9 +476,13 @@ elif st.session_state.phase == "FINISHED":
 
     st.write("")
     st.write("")
-    if st.button("Zurück zum Hauptmenü"):
-        st.session_state.phase = "START"
-        st.rerun()
+    
+    # Button in der Mitte platzieren
+    col_btn1, col_btn2, col_btn3 = st.columns([1, 2, 1])
+    with col_btn2:
+        if st.button("Zurück zum Hauptmenü"):
+            st.session_state.phase = "START"
+            st.rerun()
 
 # --- FOOTER ---
 st.write("---")
