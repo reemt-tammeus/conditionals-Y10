@@ -12,6 +12,7 @@ def get_base64_image(image_path):
         with open(image_path, "rb") as img_file:
             return base64.b64encode(img_file.read()).decode()
     except FileNotFoundError:
+        st.sidebar.error(f"⚠️ Bild '{image_path}' nicht gefunden! Bitte prüfe den Pfad.")
         return ""
 
 logo_base64 = get_base64_image("Iffy.jpg")
@@ -21,7 +22,7 @@ logo_html = f"""
     </div>
 """ if logo_base64 else ""
 
-# CSS für schwarzen Hintergrund, weiße Schrift und invertierende Buttons
+# CSS für schwarzen Hintergrund, weiße Schrift und invertierende, zentrierte Buttons
 st.markdown(f"""
     {logo_html}
     <style>
@@ -36,6 +37,13 @@ st.markdown(f"""
         color: #ffffff !important;
     }}
 
+    /* Container zentrieren */
+    div.stButton {{
+        display: flex;
+        justify-content: center;
+        width: 100%;
+    }}
+
     /* Button Styling: Schwarz mit weißem Rand, invertiert bei Hover */
     div.stButton > button:first-child {{
         background-color: #000000 !important;
@@ -45,7 +53,8 @@ st.markdown(f"""
         padding: 15px 24px !important;
         font-weight: bold !important;
         font-size: 18px !important;
-        width: 100%;
+        width: 80%;
+        max-width: 350px;
         transition: all 0.3s ease-in-out !important;
     }}
     
@@ -60,6 +69,10 @@ st.markdown(f"""
         background-color: #1a1a1a !important;
         color: #ffffff !important;
         border: 1px solid #ffffff !important;
+        text-align: center;
+        font-size: 18px !important;
+        border-radius: 10px !important;
+        padding: 10px !important;
     }}
     </style>
 """, unsafe_allow_html=True)
@@ -67,9 +80,7 @@ st.markdown(f"""
 
 # --- HILFSFUNKTIONEN ---
 def normalize_string(s):
-    """Bereinigt den String für einen toleranten Abgleich (iOS Apostroph-Problem & Case-Insensitivity)"""
     s = s.lower().strip()
-    # Ersetze alle typografischen Anführungszeichen/Apostrophe durch das Standard-Apostroph
     for char in ["’", "‘", "´", "`"]:
         s = s.replace(char, "'")
     return s
@@ -345,13 +356,13 @@ st.write("---")
 
 if st.session_state.phase == "START":
     st.subheader("Wähle einen Übungsmodus (je 20 Sätze):")
-    st.write("") # Kleiner Abstand
+    st.write("") 
     
     if st.button("Type 1 (Real Life)"):
         start_training([1], "Type 1 (Real Life)")
         st.rerun()
         
-    st.write("") # Abstand
+    st.write("") 
     if st.button("Type 2 (Dreams)"):
         start_training([2], "Type 2 (Dreams)")
         st.rerun()
@@ -397,7 +408,7 @@ elif st.session_state.phase == "TRAINING":
                     st.session_state.feedback = ("success", "Korrekt!")
                     st.session_state.score += 1
                 else:
-                    st.session_state.feedback = ("error", f"Falsch. Richtig: {' / '.join(correct_list)}")
+                    st.session_state.feedback = ("error", f"Falsch! Richtig wäre: {' oder '.join(correct_list)}")
                     st.session_state.mistakes.append({
                         "text": st.session_state.current_q['text'],
                         "user": user_input,
@@ -405,10 +416,19 @@ elif st.session_state.phase == "TRAINING":
                     })
         
         if st.session_state.feedback:
+            # Benutzerdefinierte Feedback-Boxen statt st.success/st.error
             if st.session_state.feedback[0] == "success": 
-                st.success(st.session_state.feedback[1])
+                st.markdown(f"""
+                <div style="background-color: #0f291e; border: 2px solid #28a745; border-radius: 10px; padding: 15px; text-align: center; color: #a3d9a5; font-size: 18px; margin-bottom: 15px; box-shadow: 0 0 10px rgba(40, 167, 69, 0.4);">
+                    ✅ <strong>{st.session_state.feedback[1]}</strong>
+                </div>
+                """, unsafe_allow_html=True)
             else: 
-                st.error(st.session_state.feedback[1])
+                st.markdown(f"""
+                <div style="background-color: #3b1619; border: 2px solid #dc3545; border-radius: 10px; padding: 15px; text-align: center; color: #f5b3b8; font-size: 18px; margin-bottom: 15px; box-shadow: 0 0 10px rgba(220, 53, 69, 0.4);">
+                    ❌ <strong>{st.session_state.feedback[1]}</strong>
+                </div>
+                """, unsafe_allow_html=True)
             
             if st.button("Weiter"):
                 st.session_state.counter += 1
@@ -422,7 +442,13 @@ elif st.session_state.phase == "TRAINING":
 elif st.session_state.phase == "FINISHED":
     st.balloons()
     st.header("Training beendet!")
-    st.write(f"Du hast insgesamt {st.session_state.score} von 20 Punkten erreicht.")
+    
+    # Custom Score Box
+    st.markdown(f"""
+    <div style="background-color: #1a1a1a; border: 2px solid #ffffff; border-radius: 15px; padding: 20px; text-align: center; margin-top: 20px; margin-bottom: 20px;">
+        <h2 style="color: #ffffff; margin-bottom: 0;">Dein Score: <span style="color: #ffcc00; font-size: 32px;">{st.session_state.score}</span> / 20</h2>
+    </div>
+    """, unsafe_allow_html=True)
     
     if st.session_state.mistakes:
         with st.expander("Deine Fehleranalyse ansehen"):
@@ -432,10 +458,18 @@ elif st.session_state.phase == "FINISHED":
                 st.write(f"✅ Korrekt: {m['correct']}")
                 st.write("---")
     else:
-        st.success("Perfekt! Du hast keine Fehler gemacht.")
+        st.markdown("""
+        <div style="background-color: #0f291e; border: 2px solid #28a745; border-radius: 10px; padding: 15px; text-align: center; color: #a3d9a5; font-size: 18px;">
+            🎉 <strong>Perfekt! Du hast keine Fehler gemacht.</strong>
+        </div>
+        """, unsafe_allow_html=True)
 
     st.write("")
     st.write("")
     if st.button("Zurück zum Hauptmenü"):
         st.session_state.phase = "START"
         st.rerun()
+
+# --- FOOTER ---
+st.write("---")
+st.markdown("<p style='text-align: center; color: #888888; font-size: 14px;'>created by Mr. T.</p>", unsafe_allow_html=True)
