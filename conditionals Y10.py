@@ -492,4 +492,3 @@ elif st.session_state.phase == "FINISHED":
 # --- FOOTER ---
 st.write("---")
 st.markdown("<p style='text-align: center; color: #888888; font-size: 14px;'>created by Mr. T.</p>", unsafe_allow_html=True)
-```
