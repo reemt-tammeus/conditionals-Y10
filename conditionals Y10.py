@@ -340,7 +340,7 @@ def start_training(types_list, label):
 
 # --- MAIN RENDER LOGIC ---
 
-st.title("🇬🇧 Conditional Sentences Trainer 210")
+st.title("Iffy - Conditional App")
 st.write("---")
 
 if st.session_state.phase == "START":
