@@ -1,3 +1,12 @@
+Hier ist der Code, der die Optik aus dem Entwurf in deine App bringt. 
+
+Um das Layout so harmonisch wie auf dem Bild hinzubekommen, habe ich einen kleinen Spalten-Trick angewendet: Die erste Reihe nutzt 3 gleich große Spalten. Die zweite Reihe nutzt 4 Spalten in einem speziellen Verhältnis (`[1, 2, 2, 1]`), wobei die äußeren Spalten leer bleiben. Dadurch rutschen die beiden "Mix"-Buttons exakt in die Mitte unter die erste Reihe. 
+
+Außerdem habe ich die Bildbreite von 160 auf **240** erhöht (genau 50% größer) und den Buttons eine feste Höhe sowie den leichten "Glow"-Effekt beim Hover verpasst.
+
+Hier ist der komplette, aktualisierte Code:
+
+```python
 import streamlit as st
 import random
 import base64
@@ -20,13 +29,14 @@ def get_base64_image(image_path):
         return ""
 
 logo_base64 = get_base64_image("Iffy.jpg")
+# Bild 50% größer (von width="160" auf "240") und etwas weiter nach unten (top: 180px)
 logo_html = f"""
-    <div style="position: fixed; top: 150px; right: 15px; z-index: 100;">
-        <img src="data:image/jpeg;base64,{logo_base64}" width="160" style="border-radius: 15px; box-shadow: 0px 4px 10px rgba(255,255,255,0.2);">
+    <div style="position: fixed; top: 180px; right: 15px; z-index: 100;">
+        <img src="data:image/jpeg;base64,{logo_base64}" width="240" style="border-radius: 15px; box-shadow: 0px 4px 15px rgba(255,255,255,0.4);">
     </div>
 """ if logo_base64 else ""
 
-# CSS für schwarzen Hintergrund, weiße Schrift und invertierende Buttons
+# CSS für schwarzen Hintergrund, weiße Schrift und harmonisierte Buttons
 st.markdown(f"""
     {logo_html}
     <style>
@@ -48,23 +58,27 @@ st.markdown(f"""
         width: 100%;
     }}
 
-    /* Button Styling: Schwarz mit weißem Rand, invertiert bei Hover */
+    /* Button Styling: Schwarz mit weißem Rand, invertiert bei Hover + festes Layout */
     div.stButton > button:first-child {{
         background-color: #000000 !important;
         color: #ffffff !important;
         border: 2px solid #ffffff !important;
         border-radius: 12px !important;
-        padding: 15px 10px !important;
+        padding: 10px !important;
         font-weight: bold !important;
         font-size: 16px !important;
         width: 100% !important; /* Füllt die Spalten komplett aus */
+        height: 80px !important; /* Einheitliche Höhe für mehr Harmonie */
+        box-shadow: 0 4px 6px rgba(255, 255, 255, 0.1) !important; /* Dezent glühender Rand */
         transition: all 0.3s ease-in-out !important;
     }}
     
     div.stButton > button:first-child:hover {{
         background-color: #ffffff !important;
         color: #000000 !important;
-        border: 2px solid #000000 !important;
+        border: 2px solid #ffffff !important;
+        box-shadow: 0 0 15px rgba(255, 255, 255, 0.6) !important; /* Stärkeres Leuchten bei Hover */
+        transform: scale(1.02); /* Minimaler Zoom-Effekt */
     }}
 
     /* Eingabefeld Styling anpassen */
@@ -380,8 +394,8 @@ if st.session_state.phase == "START":
             
     st.write("") # Abstand
     
-    # Zweite Zeile: 2 Spalten für die Mix Buttons
-    col4, col5 = st.columns(2)
+    # Zweite Zeile: 4 Spalten (1, 2, 2, 1), um die beiden Buttons in die Mitte zu rücken
+    spacer1, col4, col5, spacer2 = st.columns([1, 2, 2, 1])
     with col4:
         if st.button("Mix\nType 1 + 2"):
             start_training([1, 2], "Mix Type 1 + 2")
@@ -487,3 +501,4 @@ elif st.session_state.phase == "FINISHED":
 # --- FOOTER ---
 st.write("---")
 st.markdown("<p style='text-align: center; color: #888888; font-size: 14px;'>created by Mr. T.</p>", unsafe_allow_html=True)
+```
