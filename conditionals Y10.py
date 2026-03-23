@@ -1,12 +1,3 @@
-Hier ist der Code, der die Optik aus dem Entwurf in deine App bringt. 
-
-Um das Layout so harmonisch wie auf dem Bild hinzubekommen, habe ich einen kleinen Spalten-Trick angewendet: Die erste Reihe nutzt 3 gleich große Spalten. Die zweite Reihe nutzt 4 Spalten in einem speziellen Verhältnis (`[1, 2, 2, 1]`), wobei die äußeren Spalten leer bleiben. Dadurch rutschen die beiden "Mix"-Buttons exakt in die Mitte unter die erste Reihe. 
-
-Außerdem habe ich die Bildbreite von 160 auf **240** erhöht (genau 50% größer) und den Buttons eine feste Höhe sowie den leichten "Glow"-Effekt beim Hover verpasst.
-
-Hier ist der komplette, aktualisierte Code:
-
-```python
 import streamlit as st
 import random
 import base64
