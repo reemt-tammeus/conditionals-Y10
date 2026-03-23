@@ -4,7 +4,7 @@ import base64
 import os
 
 # --- KONFIGURATION & CSS ---
-st.set_page_config(page_title="Iffy - Conditional App", layout="centered")
+st.set_page_config(page_title="Iffy - Conditional App", page_icon="🇬🇧", layout="centered")
 
 # Funktion zum Laden des Logos für die absolute Positionierung
 def get_base64_image(image_path):
@@ -21,8 +21,8 @@ def get_base64_image(image_path):
 
 logo_base64 = get_base64_image("Iffy.jpg")
 logo_html = f"""
-    <div style="position: fixed; top: 15px; right: 15px; z-index: 100;">
-        <img src="data:image/jpeg;base64,{logo_base64}" width="80" style="border-radius: 15px; box-shadow: 0px 4px 10px rgba(255,255,255,0.2);">
+    <div style="position: fixed; top: 150px; right: 15px; z-index: 100;">
+        <img src="data:image/jpeg;base64,{logo_base64}" width="160" style="border-radius: 15px; box-shadow: 0px 4px 10px rgba(255,255,255,0.2);">
     </div>
 """ if logo_base64 else ""
 
